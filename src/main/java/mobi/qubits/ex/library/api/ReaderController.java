@@ -1,11 +1,15 @@
 package mobi.qubits.ex.library.api;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
 
 import mobi.qubits.ex.library.api.requests.BookRequest;
 import mobi.qubits.ex.library.api.requests.RegisterReaderRequest;
+import mobi.qubits.ex.library.domain.BookAlreadyTakenException;
+import mobi.qubits.ex.library.domain.BorrowingSameBookException;
+import mobi.qubits.ex.library.domain.MaxAllowanceExceededException;
 import mobi.qubits.ex.library.domain.commands.BorrowCommand;
 import mobi.qubits.ex.library.domain.commands.RegisterNewReaderCommand;
 import mobi.qubits.ex.library.domain.commands.ReturnCommand;
@@ -13,6 +17,7 @@ import mobi.qubits.ex.library.query.BookEntryRepository;
 import mobi.qubits.ex.library.query.ReaderEntry;
 import mobi.qubits.ex.library.query.ReaderEntryRepository;
 
+import org.axonframework.commandhandling.CommandExecutionException;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.domain.DefaultIdentifierFactory;
 import org.axonframework.domain.IdentifierFactory;
@@ -75,9 +80,61 @@ public class ReaderController {
 	
 	
 	@RequestMapping(value = "/api/readers/{id}/borrow", method = RequestMethod.POST)
-	@ResponseStatus(value = HttpStatus.NO_CONTENT)
-	public void borrowBook(@RequestBody @Valid BookRequest req, @PathVariable String id) {
-		cmdGateway.send(new BorrowCommand(id, req.getBookId()));
+
+	public ResponseEntity<?> borrowBook(@RequestBody @Valid BookRequest req, @PathVariable String id) {
+		//cmdGateway.send(new BorrowCommand(id, req.getBookId()));
+		/*
+		try {
+			cmdGateway.sendAndWait(new BorrowCommand(id, req.getBookId()), 3000, TimeUnit.MILLISECONDS);
+			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+		} catch (BookAlreadyTakenException e) {
+			e.printStackTrace();
+			String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
+			return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);			
+		}
+		catch (BorrowingSameBookException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
+			return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);			
+		}
+		catch (MaxAllowanceExceededException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
+			return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);						
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<Void>(HttpStatus.INTERNAL_SERVER_ERROR);						
+		}
+		*/
+		
+		try {
+			cmdGateway.sendAndWait(new BorrowCommand(id, req.getBookId()), 3000, TimeUnit.MILLISECONDS);
+			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+		} catch (CommandExecutionException ex) {
+			
+			//e.printStackTrace();
+			
+			Throwable e = ex.getCause();
+			
+			if (e instanceof BookAlreadyTakenException){
+				String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
+				return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);
+			} 
+			else if (e instanceof BorrowingSameBookException){
+				String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
+				return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);		
+			} else if (e instanceof MaxAllowanceExceededException){
+				String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
+				return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);			
+			} 
+			else {
+				return new ResponseEntity<Void>(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+		}
+		
 	}
 	
 	@RequestMapping(value = "/api/readers/{id}/return", method = RequestMethod.POST)

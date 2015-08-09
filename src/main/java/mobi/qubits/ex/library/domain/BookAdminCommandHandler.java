@@ -25,42 +25,29 @@ public class BookAdminCommandHandler {
 	private Repository<Reader> readerRepository;
 	
 	@CommandHandler
-	public void on(BorrowCommand cmd){
+	public void on(BorrowCommand cmd) throws BookAlreadyTakenException, BorrowingSameBookException, MaxAllowanceExceededException{
 		
 		Book book = bookRepository.load(cmd.getBookId());		
 		Reader reader = readerRepository.load(cmd.getBorrowerId());
 		
 		if (book.isBorrowed()){
-			//the book is taken
-			
-			//TODO
-			
-			return;
+			//the book is taken (not currently available)			
+			throw new BookAlreadyTakenException();			
 		}
 		
-		if (reader.hasBook(cmd.getBookId())){
-			
-			//has same book
-			
-			//TODO
-			
-			return;
+		if (reader.hasBook(cmd.getBookId())){			
+			throw new BorrowingSameBookException();
 		}
 		
 		int booksBorrowed = reader.getBooksBorrowed();
 		
-		if (booksBorrowed>=3){
-			
-			//TODO
-			
-			return;
+		if (booksBorrowed>=3){			
+			 throw new MaxAllowanceExceededException();
 		}
 		
 		reader.borrowBook(cmd.getBookId());
 		
 		book.lendBook(cmd.getBorrowerId());
-		//book.setBorrowed(true);
-		//book.increasePopularityCount();
 		
 		int pop = book.getPopularityCount();
 		

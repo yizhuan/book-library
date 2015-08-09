@@ -36,9 +36,9 @@ curl http://localhost:8080/api/readers
 
 
 ## Borrow a book
-curl -X POST -d '{"bookId":"e4dc6b10-5578-462f-810f-fbd0f3fce8a5"}' -H "Content-Type:application/json" http://localhost:8080/api/readers/a53878a5-6eb9-49c0-a315-9e55fc340d19/borrow
+curl -X POST -d '{"bookId":"3f7bf042-489a-4d5a-b0cb-ba62bf71ae32"}' -H "Content-Type:application/json" http://localhost:8080/api/readers/a5704803-ec72-4748-9453-8b7ac40674cf/borrow
 
-curl -X POST -d '{"bookId":"660c61c5-e957-4538-a6de-158483ce7eb1"}' -H "Content-Type:application/json" http://localhost:8080/api/readers/a53878a5-6eb9-49c0-a315-9e55fc340d19/borrow
+curl -X POST -d '{"bookId":"660c61c5-e957-4538-a6de-158483ce7eb1"}' -H "Content-Type:application/json" http://localhost:8080/api/readers/a5704803-ec72-4748-9453-8b7ac40674cf/borrow
 
 
 
