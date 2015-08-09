@@ -8,6 +8,7 @@ import javax.validation.Valid;
 import mobi.qubits.ex.library.api.requests.BookRequest;
 import mobi.qubits.ex.library.api.requests.RegisterReaderRequest;
 import mobi.qubits.ex.library.domain.BookAlreadyTakenException;
+import mobi.qubits.ex.library.domain.BookCommandGateway;
 import mobi.qubits.ex.library.domain.BorrowingSameBookException;
 import mobi.qubits.ex.library.domain.MaxAllowanceExceededException;
 import mobi.qubits.ex.library.domain.commands.BorrowCommand;
@@ -17,13 +18,13 @@ import mobi.qubits.ex.library.query.BookEntryRepository;
 import mobi.qubits.ex.library.query.ReaderEntry;
 import mobi.qubits.ex.library.query.ReaderEntryRepository;
 
-import org.axonframework.commandhandling.CommandExecutionException;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.domain.DefaultIdentifierFactory;
 import org.axonframework.domain.IdentifierFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -53,6 +54,9 @@ public class ReaderController {
 
 	@Autowired
 	private CommandGateway cmdGateway;
+	
+	@Autowired
+	private BookCommandGateway bookCmdGateway;
 
 	@RequestMapping(value = "/api/readers", method = RequestMethod.POST)
 	@ResponseStatus(value = HttpStatus.CREATED)
@@ -80,35 +84,54 @@ public class ReaderController {
 	
 	
 	@RequestMapping(value = "/api/readers/{id}/borrow", method = RequestMethod.POST)
-
 	public ResponseEntity<?> borrowBook(@RequestBody @Valid BookRequest req, @PathVariable String id) {
+				
+		//Customised command gateway and interface
+		
+		try {
+			
+			bookCmdGateway.sendAndWait(new BorrowCommand(id, req.getBookId()), 3000, TimeUnit.MILLISECONDS);
+			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+			
+		} catch (BookAlreadyTakenException e) {
+			return errorResponse(e.getLocalizedMessage(), req.getBookId(), HttpStatus.BAD_REQUEST);
+		}
+		catch (BorrowingSameBookException e) {			
+			return errorResponse(e.getLocalizedMessage(), req.getBookId(), HttpStatus.BAD_REQUEST);				
+		}
+		catch (MaxAllowanceExceededException e) {
+			return errorResponse(e.getLocalizedMessage(), null, 		   HttpStatus.BAD_REQUEST);
+		}
+		catch (Exception e) {
+			return new ResponseEntity<Void>(HttpStatus.INTERNAL_SERVER_ERROR);						
+		}
+		
+		//Do not support custom exceptions
 		//cmdGateway.send(new BorrowCommand(id, req.getBookId()));
+		
 		/*
+		// does not work due to Axonframework limitations
 		try {
 			cmdGateway.sendAndWait(new BorrowCommand(id, req.getBookId()), 3000, TimeUnit.MILLISECONDS);
 			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 		} catch (BookAlreadyTakenException e) {
-			e.printStackTrace();
-			String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
-			return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);			
+			return errorResponse(e.getLocalizedMessage(), req.getBookId(), HttpStatus.BAD_REQUEST);	
 		}
 		catch (BorrowingSameBookException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
-			return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);			
+			return errorResponse(e.getLocalizedMessage(), req.getBookId(), HttpStatus.BAD_REQUEST);		
 		}
 		catch (MaxAllowanceExceededException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
-			return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);						
+			return errorResponse(e.getLocalizedMessage(), null, HttpStatus.BAD_REQUEST);					
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			return new ResponseEntity<Void>(HttpStatus.INTERNAL_SERVER_ERROR);						
 		}
 		*/
+		
+		/*
+		
+		//Works using a workaround that relies on Axon wraps the exceptions
 		
 		try {
 			cmdGateway.sendAndWait(new BorrowCommand(id, req.getBookId()), 3000, TimeUnit.MILLISECONDS);
@@ -120,20 +143,20 @@ public class ReaderController {
 			Throwable e = ex.getCause();
 			
 			if (e instanceof BookAlreadyTakenException){
-				String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
-				return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);
+				return errorResponse(e.getLocalizedMessage(), req.getBookId(), HttpStatus.BAD_REQUEST);
 			} 
 			else if (e instanceof BorrowingSameBookException){
-				String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
-				return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);		
+				return errorResponse(e.getLocalizedMessage(), req.getBookId(), HttpStatus.BAD_REQUEST);
 			} else if (e instanceof MaxAllowanceExceededException){
-				String err = "{\"error\":\""+e.getLocalizedMessage() + "\"}";
-				return new ResponseEntity<String>(err, HttpStatus.BAD_REQUEST);			
+				return errorResponse(e.getLocalizedMessage(), null, HttpStatus.BAD_REQUEST);
 			} 
 			else {
 				return new ResponseEntity<Void>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
+		*/
+		
+
 		
 	}
 	
@@ -144,5 +167,13 @@ public class ReaderController {
 	}	
 
 	
-
+	private ResponseEntity<String> errorResponse(String errMsg, String bookId, HttpStatus httpStatus){
+		String err = "{"
+				+"\"error\":\""+errMsg + "\""
+				+ (bookId ==null ? "":", \"bookId\":\""+bookId+"\"")
+				+"}";
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		return new ResponseEntity<String>(err, headers, httpStatus);			
+	}
 }

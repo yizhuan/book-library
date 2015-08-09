@@ -11,6 +11,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+/**
+ * 
+ * @author yizhuan
+ *
+ */
 @Configuration
 @Import(AxonConfiguration.class)
 public class ReaderConfiguration {
