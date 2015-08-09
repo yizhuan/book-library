@@ -38,7 +38,7 @@ curl http://localhost:8080/api/readers
 ## Borrow a book
 curl -X POST -d '{"bookId":"3f7bf042-489a-4d5a-b0cb-ba62bf71ae32"}' -H "Content-Type:application/json" http://localhost:8080/api/readers/a5704803-ec72-4748-9453-8b7ac40674cf/borrow
 
-curl -X POST -d '{"bookId":"660c61c5-e957-4538-a6de-158483ce7eb1"}' -H "Content-Type:application/json" http://localhost:8080/api/readers/a5704803-ec72-4748-9453-8b7ac40674cf/borrow
+curl -X POST -d '{"bookId":"dd6985cf-50b6-44b4-9cea-03c1770cb049"}' -H "Content-Type:application/json" http://localhost:8080/api/readers/a5704803-ec72-4748-9453-8b7ac40674cf/borrow
 
 
 
@@ -46,7 +46,7 @@ curl -X POST -d '{"bookId":"660c61c5-e957-4538-a6de-158483ce7eb1"}' -H "Content-
 
 
 mongo
- &gt; show dbs
+&gt; show dbs
 &gt; use axonframework
 switched to db axonframework
 

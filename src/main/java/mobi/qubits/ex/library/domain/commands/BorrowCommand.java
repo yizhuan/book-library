@@ -1,7 +1,5 @@
 package mobi.qubits.ex.library.domain.commands;
 
-import mobi.qubits.ex.library.domain.reader.Reader;
-
 import org.axonframework.commandhandling.annotation.TargetAggregateIdentifier;
 
 /**

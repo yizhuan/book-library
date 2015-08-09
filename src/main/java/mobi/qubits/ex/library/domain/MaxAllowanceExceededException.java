@@ -2,6 +2,11 @@ package mobi.qubits.ex.library.domain;
 
 import org.axonframework.commandhandling.CommandExecutionException;
 
+/**
+ * 
+ * @author yizhuan
+ *
+ */
 public class MaxAllowanceExceededException extends CommandExecutionException {
 
 	public MaxAllowanceExceededException() {

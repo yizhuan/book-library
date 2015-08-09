@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Import;
 public class SagaConfiguration {
 	
 	@Autowired
-	AxonConfiguration axonConfig;
+	AxonConfiguration axonconf;
 	
 	@Bean 
 	public ResourceInjector resourceInjector() {
@@ -43,7 +43,7 @@ public class SagaConfiguration {
 
 	@Bean
 	public SagaRepository sagaRepository() {
-		MongoTemplate template = new DefaultMongoTemplate(axonConfig.mongo, "axonframework", "sagas", null, null);
+		MongoTemplate template = new DefaultMongoTemplate(axonconf.mongo, "axonframework", "sagas", null, null);
 		MongoSagaRepository rep = new MongoSagaRepository(template);
 		rep.setResourceInjector(resourceInjector());
 		return rep;
@@ -52,14 +52,14 @@ public class SagaConfiguration {
 	@Bean
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	public SagaManager sagaManager() {
-		AsyncAnnotatedSagaManager mgr =	new AsyncAnnotatedSagaManager(axonConfig.eventBus(), BookAdminSaga.class);
+		AsyncAnnotatedSagaManager mgr =	new AsyncAnnotatedSagaManager(axonconf.eventBus(), BookAdminSaga.class);
 		/*
 		 	AsyncAnnotatedSagaManager mgr =	new AsyncAnnotatedSagaManager(BookAdminSaga.class);
 			axonConfig.eventBus().subscribe(mgr);
 		 */
 		mgr.setSagaFactory(sagaFactory());
 		mgr.setSagaRepository(sagaRepository());
-		mgr.setExecutor(axonConfig.taskExecutor());
+		mgr.setExecutor(axonconf.taskExecutor());
 		mgr.start();
 		return mgr;
 	}

@@ -3,12 +3,8 @@ package mobi.qubits.ex.library;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 
-import mobi.qubits.ex.library.domain.book.Book;
-import mobi.qubits.ex.library.domain.reader.Reader;
-
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.SimpleCommandBus;
-import org.axonframework.commandhandling.annotation.AggregateAnnotationCommandHandler;
 import org.axonframework.commandhandling.annotation.AnnotationCommandHandlerBeanPostProcessor;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.commandhandling.gateway.CommandGatewayFactoryBean;
@@ -16,7 +12,6 @@ import org.axonframework.commandhandling.interceptors.BeanValidationInterceptor;
 import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventhandling.SimpleEventBus;
 import org.axonframework.eventhandling.annotation.AnnotationEventListenerBeanPostProcessor;
-import org.axonframework.eventsourcing.EventSourcingRepository;
 import org.axonframework.eventsourcing.Snapshotter;
 import org.axonframework.eventsourcing.SpringAggregateSnapshotter;
 import org.axonframework.eventstore.EventStore;
@@ -77,46 +72,6 @@ public class AxonConfiguration {
 		factory.setCommandBus(commandBus());
 		return factory;
 	}
-	
-	@Bean
-	public EventSourcingRepository<Book> bookRepository() {
-
-		DefaultMongoTemplate template = new DefaultMongoTemplate(this.mongo);
-		MongoEventStore eventStore = new MongoEventStore(template
-				);
-		EventSourcingRepository<Book> repository = new EventSourcingRepository<Book>(
-				Book.class, eventStore);
-		repository.setEventBus(eventBus());
-		return repository;
-	}	
-
-	@Bean
-	public AggregateAnnotationCommandHandler<Book> bookCommandHandler() {
-		AggregateAnnotationCommandHandler<Book> commandHandler = AggregateAnnotationCommandHandler
-				.subscribe(Book.class, bookRepository(), commandBus());
-		return commandHandler;
-	}
-	
-	
-	@Bean
-	public EventSourcingRepository<Reader> readerRepository() {
-
-		DefaultMongoTemplate template = new DefaultMongoTemplate(this.mongo);
-		MongoEventStore eventStore = new MongoEventStore(template
-				);
-		EventSourcingRepository<Reader> repository = new EventSourcingRepository<Reader>(
-				Reader.class, eventStore);
-		repository.setEventBus(eventBus());
-		return repository;
-	}	
-
-	@Bean
-	public AggregateAnnotationCommandHandler<Reader> readerCommandHandler() {
-		AggregateAnnotationCommandHandler<Reader> commandHandler = AggregateAnnotationCommandHandler
-				.subscribe(Reader.class, readerRepository(), commandBus());
-		return commandHandler;
-	}
-		
 	
 	
 	@Bean

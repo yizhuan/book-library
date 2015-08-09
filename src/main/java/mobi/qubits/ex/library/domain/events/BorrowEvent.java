@@ -12,9 +12,9 @@ public class BorrowEvent implements BookEvent{
 	
 	private String bookId;
 
-	public BorrowEvent(String id,  String bookId) {
+	public BorrowEvent(String borrowerId,  String bookId) {
 		super();
-		this.borrowerId = id;
+		this.borrowerId = borrowerId;
 		
 		this.bookId = bookId;
 	}
